@@ -1,0 +1,31 @@
+C4Context
+      title System Context diagram for ICT To Do List
+
+        Person(student, "Student", "Manages personal tasks, views assignments, and tracks submission status")
+        Person(instructor, "Instructor", "Monitors teaching tasks and views high-level assignment deadlines")
+        Person(admin, "System Administrator", "Manages system configuration and monitors sync health")
+    
+
+      System_Ext(mycourses, "MyCourses", "External e-learning system that owns course, assignment, and submission data")
+
+      Rel(student, web_app, "Uses web app to manage tasks", "HTTPS/JSON")
+      Rel(student, mobile_app, "Uses mobile app to manage tasks", "HTTPS/JSON")
+      Rel(instructor, web_app, "Uses web app to view tasks and monitor deadlines", "HTTPS/JSON")
+      Rel(admin, web_app, "Uses admin interface to manage system", "HTTPS/JSON")
+      
+      UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
+
+
+    Container_Boundary(todosystem, "API Application") {
+        Container(web_app, "Web App", "React", "Handles user login and JWT generation.")
+        Container(mobile_app, "Mobile App", "Flutter", "Cross-platform mobile application.")
+        Container(web_api, "Web API", "Python, FastAPI", "REST API backend serving JSON over HTTPS.")
+        Container(mycourses_connector, "MyCourses Controller", "Python", "Integration module for MyCourses API.")
+        ContainerDb(db, "Database", "PostgreSQL", "Stores profile, tasks, sync data.")
+    }
+
+    Rel(web_app, web_api, "Makes API calls to", "HTTPS/JSON")
+    Rel(mobile_app, web_api, "Makes API calls to", "HTTPS/JSON")
+    Rel(web_api, db, "Reads from and writes to", "SQL")
+    Rel(web_api, mycourses_connector, "Uses to sync data with MyCourses", "Internal API/JSON")
+    Rel(mycourses_connector, mycourses, "Fetches course, assignment, and submission data from", "MyCourses API/JSON")
