@@ -16,16 +16,34 @@ C4Context
       UpdateLayoutConfig($c4ShapeInRow="3", $c4BoundaryInRow="1")
 
 
-    Container_Boundary(todosystem, "API Application") {
-        Container(web_app, "Web App", "React", "Handles user login and JWT generation.")
-        Container(mobile_app, "Mobile App", "Flutter", "Cross-platform mobile application.")
-        Container(web_api, "Web API", "Python, FastAPI", "REST API backend serving JSON over HTTPS.")
-        Container(mycourses_connector, "MyCourses Controller", "Python", "Integration module for MyCourses API.")
-        ContainerDb(db, "Database", "PostgreSQL", "Stores profile, tasks, sync data.")
+    Container(web_app, "Web App", "React", "Handles user login and JWT generation.")
+    Container(mobile_app, "Mobile App", "Flutter", "Cross-platform mobile application.")
+    ContainerDb(db, "Database", "PostgreSQL", "Stores profile, tasks, sync data.")
+
+    Container_Boundary(todosystem, "Web API - Python FastAPI") {
+        Component(auth, "Authentication & Authorization", "FastAPI middleware", "Handles login, token validation, and access control")
+        Component(task_mgmt, "Task Management", "FastAPI routes", "CRUD operations for manual and imported tasks")
+        Component(sync_orch, "MyCourses Sync Orchestrator", "Python module", "Manages sync workflow and calls external services")
+        Component(mycourses_client, "MyCourses Client", "Python requests", "Calls MyCourses web services and handles HTTPS")
+        Component(mapping, "Mapping", "Python module", "Converts MyCourses data into internal task model")
+        Component(sync_history, "Sync History", "Python module", "Records sync outcomes for admin monitoring")
+        Component(data_access, "Data Access", "SQLAlchemy ORM", "Repository functions for PostgreSQL access")
     }
 
-    Rel(web_app, web_api, "Makes API calls to", "HTTPS/JSON")
-    Rel(mobile_app, web_api, "Makes API calls to", "HTTPS/JSON")
-    Rel(web_api, db, "Reads from and writes to", "SQL")
-    Rel(web_api, mycourses_connector, "Uses to sync data with MyCourses", "Internal API/JSON")
-    Rel(mycourses_connector, mycourses, "Fetches course, assignment, and submission data from", "MyCourses API/JSON")
+    Rel(student, web_app, "Uses web app to manage tasks", "HTTPS/JSON")
+    Rel(student, mobile_app, "Uses mobile app to manage tasks", "HTTPS/JSON")
+    Rel(instructor, web_app, "Uses web app to view tasks and monitor deadlines", "HTTPS/JSON")
+    Rel(admin, web_app, "Uses admin interface to manage system", "HTTPS/JSON")
+    
+    Rel(web_app, auth, "Authenticates via", "HTTPS/JSON")
+    Rel(mobile_app, auth, "Authenticates via", "HTTPS/JSON")
+    Rel(auth, task_mgmt, "Routes authenticated requests to")
+    Rel(task_mgmt, data_access, "Uses to manage tasks", "ORM/SQL")
+    Rel(task_mgmt, sync_orch, "Initiates sync request to")
+    Rel(sync_orch, mycourses_client, "Calls to fetch data")
+    Rel(mycourses_client, mycourses, "Fetches courses, assignments, submissions", "HTTPS/JSON")
+    Rel(sync_orch, mapping, "Uses to transform data")
+    Rel(mapping, data_access, "Uses to store mapped tasks", "ORM/SQL")
+    Rel(sync_orch, sync_history, "Records sync results to")
+    Rel(sync_history, data_access, "Persists sync records via", "ORM/SQL")
+    Rel(data_access, db, "Reads from and writes to", "SQL")
